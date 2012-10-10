@@ -80,17 +80,13 @@ void setup() {
   pinMode(iLedPinNum, OUTPUT);
   pinMode(iMtrCtrlEnablePinNum, OUTPUT);
 
-  // configure serial port 0
-  // shared with USB connector. accordingly, do not use it unless we have to
-  Serial.begin(9600);
-
   // configure serial port 1
   // use for communication with motor controller
   Serial1.begin(115200);
 
   // configure serial port 2
-  // use for communication with laptop, e.g. monitoring, data logging
-  Serial2.begin(38400);
+  // use for communication with Rascal
+  Serial2.begin(9600);
 
   // configure and start timers
   // perform this task just before exiting initialization logic, i.e. about to enter real-time mode
@@ -152,18 +148,18 @@ int realtime(){
   // read data from the serial port
   // temporarily deactivate the following so that can test logic for reading data from motor controller
   // usinf serial port 0
-  if(Serial.available() > 0) {
-    iSerCmd = Serial.read();
+  if(Serial2.available() > 0) {
+    iSerCmd = Serial2.read();
     // the following is to support debugging
 //    sprintf(cSerCmdResp, "iSerCmd = %i\r", iSerCmd);
-//    Serial.print(cSerCmdResp);
+//    Serial2.print(cSerCmdResp);
   }
 
   // read responses from motor controller
   // process complete responses, i.e. series of characters terminated by '\r'
-//  while(Serial.available() > 0){
+//  while(Serial2.available() > 0){
   while(Serial1.available() > 0){
-//    cRespByte = Serial.read();
+//    cRespByte = Serial2.read();
     cRespByte = Serial1.read();
     if(cRespByte == '\r'){
       iRespComplete = 1;
@@ -185,10 +181,10 @@ int realtime(){
     if(iRespComplete != 0){
       // call command response handler
       // for now, just send the data back to the sender
-//      Serial.write(cRespBuf);
+//      Serial2.write(cRespBuf);
       respHandler();
-//      Serial.print(iVmot, DEC);
-//      Serial.print(iMtrCtrlFaultWord, DEC);
+//      Serial2.print(iVmot, DEC);
+//      Serial2.print(iMtrCtrlFaultWord, DEC);
       // prepare for receiving and processing a new response
       // clear buffer amd reset meta data
       for(i = 0; i < iRespBufLen; i++){
@@ -355,7 +351,7 @@ int realtime(){
       iAdPinVal, 
       iMtr1Cmd, iMtr2Cmd,
       iVmot, iMtrCtrlFaultWord);
-    Serial.print(cDataBuf);
+    Serial2.print(cDataBuf);
   }
 
   // capture the current state of the real-time timer
@@ -399,11 +395,11 @@ int respHandler(){
   // and parse the data based on the expected format
 
   if(cRespBuf[0] == 'V'){
-//    Serial.println("Handling V resp type ...");
+//    Serial2.println("Handling V resp type ...");
     sscanf(cRespBuf, "V = %i : %i : %i", &iVdr, &iVmot, &iV5out);
   }
   if(cRespBuf[0] == 'F'){
-//    Serial.println("Handling FF resp type ...");
+//    Serial2.println("Handling FF resp type ...");
     sscanf(cRespBuf, "FF = %i", &iMtrCtrlFaultWord);
   }
 
